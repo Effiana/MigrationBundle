@@ -1,0 +1,88 @@
+parameters:
+    effiana_migration.db_id_name_generator.class:            Effiana\MigrationBundle\Tools\DbIdentifierNameGenerator
+    effiana_migration.data_fixtures.loader.class:            Effiana\MigrationBundle\Migration\Loader\DataFixturesLoader
+    effiana_migration.migrations.loader.class:               Effiana\MigrationBundle\Migration\Loader\MigrationsLoader
+    effiana_migration.migrations.query_executor.class:       Effiana\MigrationBundle\Migration\MigrationQueryExecutor
+    effiana_migration.migrations.executor.class:             Effiana\MigrationBundle\Migration\MigrationExecutorWithNameGenerator
+    effiana_migration.migration.pre_up.listener.class:       Effiana\MigrationBundle\EventListener\PreUpMigrationListener
+    effiana_migration.migrations.extension_manager.class:    Effiana\MigrationBundle\Migration\MigrationExtensionManager
+    effiana_migration.migration.extension.rename.class:      Effiana\MigrationBundle\Migration\Extension\RenameExtension
+    effiana_migration.tools.schema_dumper.class:             Effiana\MigrationBundle\Tools\SchemaDumper
+    effiana_migration.migration.extension.data_storage.class: Effiana\MigrationBundle\Migration\Extension\DataStorageExtension
+services:
+    effiana_migration.db_id_name_generator:
+        class: '%effiana_migration.db_id_name_generator.class%'
+
+    effiana_migration.data_fixtures.loader:
+        class: '%effiana_migration.data_fixtures.loader.class%'
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@service_container'
+
+    effiana_migration.data_fixtures.executor:
+        class: Effiana\MigrationBundle\Migration\DataFixturesExecutor
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@event_dispatcher'
+
+    effiana_migration.migrations.loader:
+        class: '%effiana_migration.migrations.loader.class%'
+        arguments:
+            - '@kernel'
+            - '@doctrine.dbal.default_connection'
+            - '@service_container'
+            - '@event_dispatcher'
+
+    effiana_migration.migrations.query_executor:
+        class: '%effiana_migration.migrations.query_executor.class%'
+        arguments:
+            - '@doctrine.dbal.default_connection'
+
+    effiana_migration.migrations.executor:
+        class: '%effiana_migration.migrations.executor.class%'
+        arguments:
+            - '@effiana_migration.migrations.query_executor'
+            - '@oro_cache.oro_data_cache_manager'
+        calls:
+            - [setExtensionManager, ['@effiana_migration.migrations.extension_manager']]
+            - [setNameGenerator, ['@effiana_migration.db_id_name_generator']]
+
+    effiana_migration.migration.pre_up.listener:
+        class: '%effiana_migration.migration.pre_up.listener.class%'
+        tags:
+            - { name: kernel.event_listener, event: effiana_migration.pre_up, method: onPreUp }
+
+    effiana_migration.migrations.extension_manager:
+        class: '%effiana_migration.migrations.extension_manager.class%'
+
+    effiana_migration.migration.extension.rename:
+        class: '%effiana_migration.migration.extension.rename.class%'
+        tags:
+            - { name: effiana_migration.extension, extension_name: rename }
+
+    effiana_migration.migration.extension.data_storage:
+        class: '%effiana_migration.migration.extension.data_storage.class%'
+        tags:
+            - { name: effiana_migration.extension, extension_name: data_store }
+
+    effiana_migration.tools.schema_dumper:
+        class: '%effiana_migration.tools.schema_dumper.class%'
+        arguments:
+            - '@twig'
+        lazy: true
+
+    effiana_migration.twig.schema_dumper:
+        class: Effiana\MigrationBundle\Twig\SchemaDumperExtension
+        public: false
+        arguments:
+            - '@doctrine'
+        tags:
+            - { name: twig.extension }
+
+    effiana_migration.listener.console_command_listener:
+        class: Effiana\MigrationBundle\EventListener\ConsoleCommandListener
+        tags:
+            - { name: kernel.event_listener, event: console.command, method: onConsoleCommand }
+
+    effiana_migration.locator.fixture_path_locator:
+        class: Effiana\MigrationBundle\Locator\FixturePathLocator

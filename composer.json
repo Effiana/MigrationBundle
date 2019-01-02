@@ -1,0 +1,44 @@
+{
+    "name": "effiana/migration-bundle",
+    "type": "symfony-bundle",
+    "description": "Schema and data migration for BAP",
+    "keywords": ["BAP", "Migration", "Schema", "Data", "Fixtures"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dominik Labudzinski",
+            "email": "dominik@labudzinski.com",
+            "homepage": "http://labudzinski.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "7.2.*",
+        "symfony/symfony": "^4.2",
+        "phpunit/phpunit": "^7.5",
+        "doctrine/dbal": "^2.9",
+        "doctrine/doctrine-bundle": "^1.10",
+        "doctrine/orm": "^2.6",
+        "doctrine/data-fixtures": "^1.3"
+    },
+    "autoload": {
+        "psr-4": { "Effiana\\MigrationBundle\\": "src/" }
+    },
+    "target-dir": "Effiana/MigrationBundle",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "7.2"
+        },
+        "preferred-install": {
+            "*": "dist"
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "apcu-autoloader": true
+    }
+}

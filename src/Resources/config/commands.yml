@@ -1,0 +1,18 @@
+services:
+    Effiana\MigrationBundle\Command\DumpMigrationsCommand:
+        public: false
+        class: Effiana\MigrationBundle\Command\DumpMigrationsCommand
+        tags:
+            - { name: console.command }
+
+    Effiana\MigrationBundle\Command\LoadDataFixturesCommand:
+        public: false
+        class: Effiana\MigrationBundle\Command\LoadDataFixturesCommand
+        tags:
+            - { name: console.command }
+
+    Effiana\MigrationBundle\Command\LoadMigrationsCommand:
+        public: false
+        class: Effiana\MigrationBundle\Command\LoadMigrationsCommand
+        tags:
+            - { name: console.command }

@@ -1,0 +1,4 @@
+oro_entity:
+    entity_alias_exclusions:
+        - Effiana\MigrationBundle\Entity\DataFixture
+        - Effiana\MigrationBundle\Entity\DataMigration
