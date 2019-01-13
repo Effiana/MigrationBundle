@@ -14,6 +14,7 @@ services:
         class: '%effiana_migration.db_id_name_generator.class%'
 
     effiana_migration.data_fixtures.loader:
+        public: true
         class: '%effiana_migration.data_fixtures.loader.class%'
         arguments:
             - '@doctrine.orm.entity_manager'
@@ -85,4 +86,5 @@ services:
             - { name: kernel.event_listener, event: console.command, method: onConsoleCommand }
 
     effiana_migration.locator.fixture_path_locator:
+        public: true
         class: Effiana\MigrationBundle\Locator\FixturePathLocator
