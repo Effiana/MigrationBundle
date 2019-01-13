@@ -14,7 +14,7 @@
     ],
     "require": {
         "php": "7.2.*",
-        "symfony/symfony": "^4.2",
+        "symfony/framework-bundle": "^4.2",
         "phpunit/phpunit": "^7.5",
         "doctrine/dbal": "^2.9",
         "doctrine/doctrine-bundle": "^1.10",
