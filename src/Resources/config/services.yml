@@ -27,6 +27,7 @@ services:
             - '@event_dispatcher'
 
     effiana_migration.migrations.loader:
+        public: true
         class: '%effiana_migration.migrations.loader.class%'
         arguments:
             - '@kernel'
@@ -38,12 +39,13 @@ services:
         class: '%effiana_migration.migrations.query_executor.class%'
         arguments:
             - '@doctrine.dbal.default_connection'
-
+        calls:
+        - [setLogger, ['@logger']]
     effiana_migration.migrations.executor:
+        public: true
         class: '%effiana_migration.migrations.executor.class%'
         arguments:
             - '@effiana_migration.migrations.query_executor'
-            - '@oro_cache.oro_data_cache_manager'
         calls:
             - [setExtensionManager, ['@effiana_migration.migrations.extension_manager']]
             - [setNameGenerator, ['@effiana_migration.db_id_name_generator']]

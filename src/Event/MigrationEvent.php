@@ -3,7 +3,7 @@
 namespace Effiana\MigrationBundle\Event;
 
 use Doctrine\DBAL\Connection;
-use Oro\Bundle\EntityBundle\Tools\SafeDatabaseChecker;
+use Effiana\MigrationBundle\Tools\SafeDatabaseChecker;
 use Effiana\MigrationBundle\Migration\Migration;
 use Symfony\Component\EventDispatcher\Event;
 
