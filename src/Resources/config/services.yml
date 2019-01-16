@@ -21,6 +21,7 @@ services:
             - '@service_container'
 
     effiana_migration.data_fixtures.executor:
+        public: true
         class: Effiana\MigrationBundle\Migration\DataFixturesExecutor
         arguments:
             - '@doctrine.orm.entity_manager'
