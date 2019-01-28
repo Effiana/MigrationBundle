@@ -11,6 +11,10 @@ use Doctrine\ORM\EntityManager;
 use Symfony\Bridge\Doctrine\DataFixtures\ContainerAwareLoader;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Class DataFixturesLoader
+ * @package Effiana\MigrationBundle\Migration\Loader
+ */
 class DataFixturesLoader extends ContainerAwareLoader
 {
     /** @var EntityManager */
@@ -108,6 +112,7 @@ class DataFixturesLoader extends ContainerAwareLoader
 
     /**
      * @return array
+     * @throws \ReflectionException
      */
     protected function getAllFixtures()
     {

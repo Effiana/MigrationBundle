@@ -70,6 +70,7 @@ services:
             - { name: effiana_migration.extension, extension_name: data_store }
 
     effiana_migration.tools.schema_dumper:
+        public: true
         class: '%effiana_migration.tools.schema_dumper.class%'
         arguments:
             - '@twig'
