@@ -296,21 +296,6 @@ class MigrationExecutor
      */
     protected function checkIndex(Table $table, Index $index, Migration $migration)
     {
-        $columns = $index->getColumns();
-        foreach ($columns as $columnName) {
-            if ($table->getColumn($columnName)->getLength() > MySqlPlatform::LENGTH_LIMIT_TINYTEXT) {
-                throw new InvalidNameException(
-                    sprintf(
-                        'Could not create index for column with length more than %s. ' .
-                        'Please correct "%s" column length "%s" in table in "%s" migration',
-                        MySqlPlatform::LENGTH_LIMIT_TINYTEXT,
-                        $columnName,
-                        $table->getName(),
-                        get_class($migration)
-                    )
-                );
-            }
-        }
     }
 
     /**

@@ -11,7 +11,7 @@ class DbIdentifierNameGenerator
      */
     public function getMaxIdentifierSize()
     {
-        return 30;
+        return 50;
     }
 
     /**
