@@ -2,6 +2,7 @@
 
 namespace Effiana\MigrationBundle\Migration;
 
+use Doctrine\DBAL\Platforms\PostgreSQL100Platform;
 use Effiana\MigrationBundle\Exception\InvalidNameException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
