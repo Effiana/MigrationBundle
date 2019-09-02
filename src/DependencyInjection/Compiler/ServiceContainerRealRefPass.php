@@ -29,10 +29,10 @@ class ServiceContainerRealRefPass implements CompilerPassInterface
      */
     public function process(ContainerBuilder $container)
     {
-        if (!$container->hasDefinition('oro_migration.service_container')) {
+        if (!$container->hasDefinition('effiana_migration.service_container')) {
             return;
         }
-        $migrationContainer = $container->getDefinition('oro_migration.service_container');
+        $migrationContainer = $container->getDefinition('effiana_migration.service_container');
         $privateContainer = $container->getDefinition((string) $migrationContainer->getArgument(2));
         $definitions = $container->getDefinitions();
         /** @var ServiceClosureArgument $argument */

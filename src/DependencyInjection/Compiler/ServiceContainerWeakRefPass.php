@@ -32,7 +32,7 @@ class ServiceContainerWeakRefPass implements CompilerPassInterface
      */
     public function process(ContainerBuilder $container)
     {
-        if (!$container->hasDefinition('oro_migration.service_container')) {
+        if (!$container->hasDefinition('effiana_migration.service_container')) {
             return;
         }
         $privateServices = [];
@@ -61,7 +61,7 @@ class ServiceContainerWeakRefPass implements CompilerPassInterface
             }
         }
         if ($privateServices) {
-            $definition = $definitions[(string) $definitions['oro_migration.service_container']->getArgument(2)];
+            $definition = $definitions[(string) $definitions['effiana_migration.service_container']->getArgument(2)];
             $definition->replaceArgument(0, $privateServices);
         }
     }
