@@ -13,12 +13,21 @@ services:
     effiana_migration.db_id_name_generator:
         class: '%effiana_migration.db_id_name_generator.class%'
 
+    effiana_migration.service_container:
+        class: Effiana\MigrationBundle\Container\MigrationContainer
+        public: false
+        arguments:
+            - '@?parameter_bag'
+            - '@service_container'
+            - !service
+                class: Symfony\Component\DependencyInjection\ServiceLocator
+                arguments: [[]]
     effiana_migration.data_fixtures.loader:
         public: true
         class: '%effiana_migration.data_fixtures.loader.class%'
         arguments:
             - '@doctrine.orm.entity_manager'
-            - '@service_container'
+            - '@effiana_migration.service_container'
 
     effiana_migration.data_fixtures.executor:
         public: true
@@ -33,7 +42,7 @@ services:
         arguments:
             - '@kernel'
             - '@doctrine.dbal.default_connection'
-            - '@service_container'
+            - '@effiana_migration.service_container'
             - '@event_dispatcher'
 
     effiana_migration.migrations.query_executor:

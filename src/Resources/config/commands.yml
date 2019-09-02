@@ -7,6 +7,11 @@ services:
 
     Effiana\MigrationBundle\Command\LoadDataFixturesCommand:
         public: false
+        arguments:
+            - '@kernel'
+            - '@effiana_migration.data_fixtures.loader'
+            - '@effiana_migration.data_fixtures.executor'
+            - '@effiana_migration.locator.fixture_path_locator'
         class: Effiana\MigrationBundle\Command\LoadDataFixturesCommand
         tags:
             - { name: console.command }

@@ -6,36 +6,58 @@ use Effiana\MigrationBundle\Locator\FixturePathLocatorInterface;
 use Effiana\MigrationBundle\Migration\DataFixturesExecutorInterface;
 use Effiana\MigrationBundle\Migration\Loader\DataFixturesLoader;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 /**
  * This command load fixtures
  *
  * @package Effiana\MigrationBundle\Command
  */
-class LoadDataFixturesCommand extends ContainerAwareCommand
+class LoadDataFixturesCommand extends Command
 {
-    const COMMAND_NAME = 'effiana:migration:data:load';
+    public const MAIN_FIXTURES_TYPE = DataFixturesExecutorInterface::MAIN_FIXTURES;
+    public const DEMO_FIXTURES_TYPE = DataFixturesExecutorInterface::DEMO_FIXTURES;
 
-    const MAIN_FIXTURES_TYPE = DataFixturesExecutorInterface::MAIN_FIXTURES;
-    const DEMO_FIXTURES_TYPE = DataFixturesExecutorInterface::DEMO_FIXTURES;
-
-    /** @deprecated since 2.6 please use effiana_migration.locator.fixture_path_locator */
-    const MAIN_FIXTURES_PATH = 'Migrations/Data/ORM';
-
-    /** @deprecated since 2.6 please use effiana_migration.locator.fixture_path_locator */
-    const DEMO_FIXTURES_PATH = 'Migrations/Data/Demo/ORM';
+    /** @var string */
+    protected static $defaultName = 'effiana:migration:data:load';
+    /** @var KernelInterface */
+    protected $kernel;
+    /** @var DataFixturesLoader */
+    protected $dataFixturesLoader;
+    /** @var DataFixturesExecutorInterface */
+    protected $dataFixturesExecutor;
+    /** @var FixturePathLocatorInterface */
+    protected $fixturePathLocator;
+    /**
+     * @param KernelInterface $kernel
+     * @param DataFixturesLoader $dataFixturesLoader
+     * @param DataFixturesExecutorInterface $dataFixturesExecutor
+     * @param FixturePathLocatorInterface $fixturePathLocator
+     */
+    public function __construct(
+        KernelInterface $kernel,
+        DataFixturesLoader $dataFixturesLoader,
+        DataFixturesExecutorInterface $dataFixturesExecutor,
+        FixturePathLocatorInterface $fixturePathLocator
+    ) {
+        parent::__construct();
+        $this->kernel = $kernel;
+        $this->dataFixturesLoader = $dataFixturesLoader;
+        $this->dataFixturesExecutor = $dataFixturesExecutor;
+        $this->fixturePathLocator = $fixturePathLocator;
+    }
 
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
-        $this->setName(static::COMMAND_NAME)
-            ->setDescription('Load data fixtures.')
+        $this->setDescription('Load data fixtures.')
             ->addOption(
                 'fixtures-type',
                 null,
@@ -104,7 +126,7 @@ class LoadDataFixturesCommand extends ContainerAwareCommand
         $fixtureRelativePath = $this->getFixtureRelativePath($input);
 
         /** @var BundleInterface[] $bundles */
-        $bundles = $this->getApplication()->getKernel()->getBundles();
+        $bundles = $this->kernel->getBundles();
         foreach ($bundles as $bundle) {
             if (!empty($includeBundles) && !in_array($bundle->getName(), $includeBundles, true)) {
                 continue;
@@ -114,11 +136,11 @@ class LoadDataFixturesCommand extends ContainerAwareCommand
             }
             $path = $bundle->getPath() . $fixtureRelativePath;
             if (is_dir($path)) {
-                $loader->loadFromDirectory($path);
+                $this->dataFixturesLoader->loadFromDirectory($path);
             }
         }
 
-        return $loader->getFixtures();
+        return $this->dataFixturesLoader->getFixtures();
     }
 
     /**
@@ -167,21 +189,19 @@ class LoadDataFixturesCommand extends ContainerAwareCommand
      */
     protected function executeFixtures(OutputInterface $output, $fixtures, $fixturesType)
     {
-        /** @var DataFixturesExecutorInterface $loader */
-        $executor = $this->getContainer()->get('effiana_migration.data_fixtures.executor');
-        $executor->setLogger(
-            function ($message) use ($output) {
+        $this->dataFixturesExecutor->setLogger(
+            static function ($message) use ($output) {
                 $output->writeln(sprintf('  <comment>></comment> <info>%s</info>', $message));
             }
         );
-        $executor->execute($fixtures, $fixturesType);
+        $this->dataFixturesExecutor->execute($fixtures, $fixturesType);
     }
 
     /**
      * @param InputInterface $input
      * @return string
      */
-    protected function getTypeOfFixtures(InputInterface $input)
+    protected function getTypeOfFixtures(InputInterface $input): string
     {
         return $input->getOption('fixtures-type');
     }
@@ -191,19 +211,11 @@ class LoadDataFixturesCommand extends ContainerAwareCommand
      *
      * @return string
      */
-    protected function getFixtureRelativePath(InputInterface $input)
+    protected function getFixtureRelativePath(InputInterface $input): string
     {
         $fixtureType         = (string)$this->getTypeOfFixtures($input);
-        $fixtureRelativePath = $this->getFixturePathLocator()->getPath($fixtureType);
+        $fixtureRelativePath = $this->fixturePathLocator->getPath($fixtureType);
 
         return str_replace('/', DIRECTORY_SEPARATOR, sprintf('/%s', $fixtureRelativePath));
-    }
-
-    /**
-     * @return FixturePathLocatorInterface
-     */
-    protected function getFixturePathLocator(): FixturePathLocatorInterface
-    {
-        return $this->getContainer()->get('effiana_migration.locator.fixture_path_locator');
     }
 }
