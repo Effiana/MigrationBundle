@@ -3,11 +3,14 @@
 namespace Effiana\MigrationBundle\Twig;
 
 use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFunction;
 
-class SchemaDumperExtension extends \Twig_Extension
+class SchemaDumperExtension extends AbstractExtension
 {
     /** @var ManagerRegistry */
     protected $doctrine;
@@ -44,7 +47,7 @@ class SchemaDumperExtension extends \Twig_Extension
     /**
      * {@inheritdoc}
      */
-    public function getName()
+    public function getName(): string
     {
         return 'schema_dumper_extension';
     }
@@ -52,18 +55,19 @@ class SchemaDumperExtension extends \Twig_Extension
     /**
      * {@inheritdoc}
      */
-    public function getFunctions()
+    public function getFunctions(): array
     {
         return [
-            new \Twig_SimpleFunction('effiana_migration_get_schema_column_options', [$this, 'getColumnOptions']),
+            new TwigFunction('effiana_migration_get_schema_column_options', [$this, 'getColumnOptions']),
         ];
     }
 
     /**
      * @param Column $column
      * @return array
+     * @throws DBALException
      */
-    public function getColumnOptions(Column $column)
+    public function getColumnOptions(Column $column): array
     {
         $defaultOptions = $this->getDefaultOptions();
         $platform = $this->getPlatform();
@@ -94,7 +98,7 @@ class SchemaDumperExtension extends \Twig_Extension
      */
     protected function getColumnOption(Column $column, $optionName)
     {
-        $method = "get" . $optionName;
+        $method = 'get' . $optionName;
 
         return $column->$method();
     }
@@ -102,7 +106,7 @@ class SchemaDumperExtension extends \Twig_Extension
     /**
      * @return AbstractPlatform
      */
-    protected function getPlatform()
+    protected function getPlatform(): AbstractPlatform
     {
         if (!$this->platform) {
             $this->platform = $this->doctrine->getConnection()->getDatabasePlatform();
@@ -113,8 +117,9 @@ class SchemaDumperExtension extends \Twig_Extension
 
     /**
      * @return array
+     * @throws DBALException
      */
-    protected function getDefaultOptions()
+    protected function getDefaultOptions(): array
     {
         if (!$this->defaultColumn) {
             $this->defaultColumn = new Column('_template_', Type::getType(Type::STRING));
