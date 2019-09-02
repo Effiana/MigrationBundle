@@ -5,7 +5,6 @@ namespace Effiana\MigrationBundle\Command;
 use Effiana\MigrationBundle\Locator\FixturePathLocatorInterface;
 use Effiana\MigrationBundle\Migration\DataFixturesExecutorInterface;
 use Effiana\MigrationBundle\Migration\Loader\DataFixturesLoader;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -88,7 +87,7 @@ class LoadDataFixturesCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $fixtures = null;
         try {
@@ -97,7 +96,7 @@ class LoadDataFixturesCommand extends Command
             $output->writeln('');
             $output->writeln(sprintf('<error>%s</error>', $ex->getMessage()));
 
-            return $ex->getCode() == 0 ? 1 : $ex->getCode();
+            return $ex->getCode() === 0 ? 1 : $ex->getCode();
         }
 
         if (!empty($fixtures)) {
@@ -117,10 +116,8 @@ class LoadDataFixturesCommand extends Command
      * @return array
      * @throws \RuntimeException if loading of data fixtures should be terminated
      */
-    protected function getFixtures(InputInterface $input, OutputInterface $output)
+    protected function getFixtures(InputInterface $input, OutputInterface $output): array
     {
-        /** @var DataFixturesLoader $loader */
-        $loader = $this->getContainer()->get('effiana_migration.data_fixtures.loader');
         $includeBundles = $input->getOption('bundles');
         $excludeBundles = $input->getOption('exclude');
         $fixtureRelativePath = $this->getFixtureRelativePath($input);
@@ -150,7 +147,7 @@ class LoadDataFixturesCommand extends Command
      * @param OutputInterface $output
      * @param array           $fixtures
      */
-    protected function outputFixtures(InputInterface $input, OutputInterface $output, $fixtures)
+    protected function outputFixtures(InputInterface $input, OutputInterface $output, $fixtures): void
     {
         $output->writeln(
             sprintf(
@@ -170,7 +167,7 @@ class LoadDataFixturesCommand extends Command
      * @param OutputInterface $output
      * @param array           $fixtures
      */
-    protected function processFixtures(InputInterface $input, OutputInterface $output, $fixtures)
+    protected function processFixtures(InputInterface $input, OutputInterface $output, $fixtures): void
     {
         $output->writeln(
             sprintf(
@@ -187,7 +184,7 @@ class LoadDataFixturesCommand extends Command
      * @param array           $fixtures
      * @param string          $fixturesType
      */
-    protected function executeFixtures(OutputInterface $output, $fixtures, $fixturesType)
+    protected function executeFixtures(OutputInterface $output, $fixtures, $fixturesType): void
     {
         $this->dataFixturesExecutor->setLogger(
             static function ($message) use ($output) {
