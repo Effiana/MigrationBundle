@@ -9,7 +9,7 @@ use Doctrine\DBAL\Schema\Sequence;
 
 class SchemaWithNameGenerator extends Schema
 {
-    const TABLE_CLASS = 'Effiana\MigrationBundle\Migration\Schema\TableWithNameGenerator';
+    public const TABLE_CLASS = TableWithNameGenerator::class;
 
     /**
      * @var DbIdentifierNameGenerator
@@ -36,7 +36,7 @@ class SchemaWithNameGenerator extends Schema
     /**
      * {@inheritdoc}
      */
-    protected function createTableObject(array $args)
+    protected function createTableObject(array $args): \Doctrine\DBAL\Schema\Table
     {
         $args['nameGenerator'] = $this->nameGenerator;
 
@@ -45,13 +45,14 @@ class SchemaWithNameGenerator extends Schema
 
     /**
      * {@inheritdoc}
+     * @throws DBALException
      */
     public function renameTable($oldTableName, $newTableName)
     {
         throw new DBALException(
-            "Schema#renameTable() was removed, because it drops and recreates " .
-            "the table instead. There is no fix available, because a schema diff cannot reliably detect if a " .
-            "table was renamed or one table was created and another one dropped."
+            'Schema#renameTable() was removed, because it drops and recreates ' .
+            'the table instead. There is no fix available, because a schema diff cannot reliably detect if a ' .
+            'table was renamed or one table was created and another one dropped.'
         );
     }
 }

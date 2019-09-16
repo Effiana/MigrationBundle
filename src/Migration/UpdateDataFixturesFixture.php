@@ -20,7 +20,7 @@ class UpdateDataFixturesFixture extends AbstractFixture
      *
      * @param array $classNames
      */
-    public function setDataFixtures($classNames)
+    public function setDataFixtures($classNames): void
     {
         $this->dataFixturesClassNames = $classNames;
     }

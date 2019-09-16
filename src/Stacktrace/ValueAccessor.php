@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Effiana\MigrationBundle\Stacktrace;
 
@@ -19,7 +20,7 @@ class ValueAccessor
      *
      * @return float
      */
-    public function sum(Node $node, $attribute)
+    public function sum(Node $node, $attribute): float
     {
         $key = spl_object_hash($node).$attribute;
         

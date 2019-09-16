@@ -12,7 +12,7 @@ class DataFixtureRepository extends EntityRepository
      *
      * @return DataFixture[]
      */
-    public function findByClassName($className)
+    public function findByClassName($className): array
     {
         return $this->findBy(['className' => $className]);
     }
@@ -23,7 +23,7 @@ class DataFixtureRepository extends EntityRepository
      *
      * @return bool
      */
-    public function isDataFixtureExists($where, array $parameters = [])
+    public function isDataFixtureExists($where, array $parameters = []): bool
     {
         $entityId = $this->createQueryBuilder('m')
             ->select('m.id')
@@ -42,7 +42,7 @@ class DataFixtureRepository extends EntityRepository
      * @param string $where        condition
      * @param array  $parameters   optional parameters for where condition
      */
-    public function updateDataFixutreHistory(array $updateFields, $where, array $parameters = [])
+    public function updateDataFixutreHistory(array $updateFields, $where, array $parameters = []): void
     {
         $qb = $this->_em
             ->createQueryBuilder()

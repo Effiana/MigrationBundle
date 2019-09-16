@@ -2,6 +2,7 @@
 
 namespace Effiana\MigrationBundle\DependencyInjection\Compiler;
 
+use Effiana\MigrationBundle\Migration\MigrationExtensionManager;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -9,13 +10,13 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class MigrationExtensionPass implements CompilerPassInterface
 {
-    const MANAGER_SERVICE_KEY = 'effiana_migration.migrations.extension_manager';
-    const TAG                 = 'effiana_migration.extension';
+    private const MANAGER_SERVICE_KEY = MigrationExtensionManager::class;
+    private const TAG                 = 'effiana_migration.extension';
 
     /**
      * {@inheritdoc}
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasDefinition(self::MANAGER_SERVICE_KEY)) {
             return;
@@ -38,7 +39,7 @@ class MigrationExtensionPass implements CompilerPassInterface
      * @return array
      * @throws InvalidConfigurationException
      */
-    protected function loadExtensions(ContainerBuilder $container)
+    protected function loadExtensions(ContainerBuilder $container): array
     {
         $taggedServices = $container->findTaggedServiceIds(self::TAG);
         $extensions     = [];

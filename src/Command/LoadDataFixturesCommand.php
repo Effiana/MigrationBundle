@@ -122,6 +122,18 @@ class LoadDataFixturesCommand extends Command
         $excludeBundles = $input->getOption('exclude');
         $fixtureRelativePath = $this->getFixtureRelativePath($input);
 
+        /**
+         * Symfony 4 App
+         */
+        $appMigrationPath = str_replace(
+            '/',
+            DIRECTORY_SEPARATOR,
+            $this->kernel->getRootDir() . '/' . $fixtureRelativePath
+        );
+        if (is_dir($appMigrationPath)) {
+            $this->dataFixturesLoader->loadFromDirectory($appMigrationPath);
+        }
+
         /** @var BundleInterface[] $bundles */
         $bundles = $this->kernel->getBundles();
         foreach ($bundles as $bundle) {

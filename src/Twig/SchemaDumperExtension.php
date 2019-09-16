@@ -7,23 +7,23 @@ use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\ServiceSubscriberInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
-
-class SchemaDumperExtension extends AbstractExtension
+/**
+ * Provides a Twig function used in generator of data migration classes:
+ *   - oro_migration_get_schema_column_options
+ */
+class SchemaDumperExtension extends AbstractExtension implements ServiceSubscriberInterface
 {
-    /** @var ManagerRegistry */
-    protected $doctrine;
-
     /** @var AbstractPlatform */
     protected $platform;
-
     /** @var Column */
     protected $defaultColumn;
-
     /** @var array */
     protected $defaultColumnOptions = [];
-
     /** @var array */
     protected $optionNames = [
         'default',
@@ -35,30 +35,32 @@ class SchemaDumperExtension extends AbstractExtension
         'unsigned',
         'autoincrement'
     ];
+    /**
+     * @var EntityManagerInterface
+     */
+    private $entityManager;
 
     /**
-     * @param ManagerRegistry $doctrine
+     * @param EntityManagerInterface $entityManager
      */
-    public function __construct(ManagerRegistry $doctrine)
+    public function __construct(EntityManagerInterface $entityManager)
     {
-        $this->doctrine = $doctrine;
+        $this->entityManager = $entityManager;
     }
-
     /**
      * {@inheritdoc}
      */
-    public function getName(): string
+    public function getName(): String
     {
         return 'schema_dumper_extension';
     }
-
     /**
      * {@inheritdoc}
      */
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('effiana_migration_get_schema_column_options', [$this, 'getColumnOptions']),
+            new TwigFunction('oro_migration_get_schema_column_options', [$this, 'getColumnOptions']),
         ];
     }
 
@@ -72,14 +74,12 @@ class SchemaDumperExtension extends AbstractExtension
         $defaultOptions = $this->getDefaultOptions();
         $platform = $this->getPlatform();
         $options = [];
-
         foreach ($this->optionNames as $optionName) {
             $value = $this->getColumnOption($column, $optionName);
             if ($value !== $defaultOptions[$optionName]) {
                 $options[$optionName] = $value;
             }
         }
-
         $comment = $column->getComment();
         if ($platform && $platform->isCommentedDoctrineType($column->getType())) {
             $comment .= $platform->getDoctrineTypeComment($column->getType());
@@ -87,10 +87,8 @@ class SchemaDumperExtension extends AbstractExtension
         if (!empty($comment)) {
             $options['comment'] = $comment;
         }
-
         return $options;
     }
-
     /**
      * @param Column $column
      * @param string $optionName
@@ -99,19 +97,20 @@ class SchemaDumperExtension extends AbstractExtension
     protected function getColumnOption(Column $column, $optionName)
     {
         $method = 'get' . $optionName;
-
         return $column->$method();
     }
 
     /**
      * @return AbstractPlatform
+     * @throws DBALException
      */
     protected function getPlatform(): AbstractPlatform
     {
         if (!$this->platform) {
-            $this->platform = $this->doctrine->getConnection()->getDatabasePlatform();
+            $this->platform = $this->entityManager
+                ->getConnection()
+                ->getDatabasePlatform();
         }
-
         return $this->platform;
     }
 
@@ -129,7 +128,16 @@ class SchemaDumperExtension extends AbstractExtension
                 $this->defaultColumnOptions[$optionName] = $this->getColumnOption($this->defaultColumn, $optionName);
             }
         }
-
         return $this->defaultColumnOptions;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function getSubscribedServices(): array
+    {
+        return [
+            'doctrine' => EntityManagerInterface::class,
+        ];
     }
 }

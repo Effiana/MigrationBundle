@@ -2,7 +2,9 @@
 
 namespace Effiana\MigrationBundle\Migration;
 
+use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Platforms\PostgreSQL100Platform;
+use Doctrine\DBAL\Schema\SchemaException;
 use Effiana\MigrationBundle\Exception\InvalidNameException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
@@ -16,7 +18,9 @@ use Doctrine\DBAL\Schema\SchemaDiff;
 use Doctrine\DBAL\Schema\Sequence;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\TableDiff;
+use Exception;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 class MigrationExecutor
 {
@@ -48,7 +52,7 @@ class MigrationExecutor
      *
      * @param LoggerInterface $logger
      */
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
@@ -58,7 +62,7 @@ class MigrationExecutor
      *
      * @return MigrationQueryExecutor
      */
-    public function getQueryExecutor()
+    public function getQueryExecutor(): MigrationQueryExecutor
     {
         return $this->queryExecutor;
     }
@@ -67,9 +71,9 @@ class MigrationExecutor
      * Sets extension manager
      *
      * @param MigrationExtensionManager $extensionManager
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    public function setExtensionManager(MigrationExtensionManager $extensionManager)
+    public function setExtensionManager(MigrationExtensionManager $extensionManager): void
     {
         $this->extensionManager = $extensionManager;
         $connection = $this->queryExecutor->getConnection();
@@ -83,9 +87,9 @@ class MigrationExecutor
      * @param MigrationState[] $migrations
      * @param bool $dryRun
      *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    public function executeUp(array $migrations, $dryRun = false)
+    public function executeUp(array $migrations, $dryRun = false): void
     {
         $platform = $this->queryExecutor->getConnection()->getDatabasePlatform();
         $schema = $this->getActualSchema();
@@ -109,7 +113,7 @@ class MigrationExecutor
         }
 
         if (!empty($failedMigrations)) {
-            throw new \RuntimeException(sprintf('Failed migrations: %s.', implode(', ', $failedMigrations)));
+            throw new RuntimeException(sprintf('Failed migrations: %s.', implode(', ', $failedMigrations)));
         }
     }
 
@@ -126,7 +130,8 @@ class MigrationExecutor
         AbstractPlatform $platform,
         Migration $migration,
         $dryRun = false
-    ) {
+    ): bool
+    {
         $result = true;
 
         $this->logger->info(sprintf('> %s', get_class($migration)));
@@ -153,18 +158,16 @@ class MigrationExecutor
             $isSchemaUpdateRequired = false;
             foreach ($queries as $query) {
                 $this->queryExecutor->execute($query, $dryRun);
-                if (is_object($query) && $query instanceof SchemaUpdateQuery) {
-                    // check if schema update required
-                    if (!$isSchemaUpdateRequired && $query->isUpdateRequired()) {
-                        $isSchemaUpdateRequired = true;
-                    }
+                // check if schema update required
+                if (is_object($query) && $query instanceof SchemaUpdateQuery && !$isSchemaUpdateRequired && $query->isUpdateRequired()) {
+                    $isSchemaUpdateRequired = true;
                 }
             }
 
             if ($isSchemaUpdateRequired) {
                 $schema = $this->getActualSchema();
             }
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             $result = false;
             $this->logger->error(sprintf('  ERROR: %s', $ex->getMessage()));
         }
@@ -181,7 +184,7 @@ class MigrationExecutor
      *
      * @return Schema
      */
-    protected function createSchemaObject(array $tables = [], array $sequences = [], $schemaConfig = null)
+    protected function createSchemaObject(array $tables = [], array $sequences = [], ?SchemaConfig $schemaConfig = null): Schema
     {
         return new Schema($tables, $sequences, $schemaConfig);
     }
@@ -191,7 +194,7 @@ class MigrationExecutor
      *
      * @param Migration $migration
      */
-    protected function setExtensions(Migration $migration)
+    protected function setExtensions(Migration $migration): void
     {
         if ($this->extensionManager) {
             $this->extensionManager->applyExtensions($migration);
@@ -206,7 +209,7 @@ class MigrationExecutor
      *
      * @throws InvalidNameException if invalid table or column name is detected
      */
-    protected function checkTables(SchemaDiff $schemaDiff, Migration $migration)
+    protected function checkTables(SchemaDiff $schemaDiff, Migration $migration): void
     {
         foreach ($schemaDiff->newTables as $table) {
             $this->checkTableName($table->getName(), $migration);
@@ -231,7 +234,7 @@ class MigrationExecutor
      *
      * @throws InvalidNameException if invalid column name is detected
      */
-    protected function checkColumnNames($tableName, $columns, Migration $migration)
+    protected function checkColumnNames($tableName, $columns, Migration $migration): void
     {
         foreach ($columns as $column) {
             $this->checkColumnName($tableName, $column->getName(), $migration);
@@ -246,7 +249,7 @@ class MigrationExecutor
      *
      * @throws InvalidNameException if table name is invalid
      */
-    protected function checkTableName($tableName, Migration $migration)
+    protected function checkTableName($tableName, Migration $migration): void
     {
     }
 
@@ -259,16 +262,16 @@ class MigrationExecutor
      *
      * @throws InvalidNameException if column name is invalid
      */
-    protected function checkColumnName($tableName, $columnName, Migration $migration)
+    protected function checkColumnName($tableName, $columnName, Migration $migration): void
     {
     }
 
     /**
      * @param SchemaDiff $schemaDiff
      * @param Migration $migration
-     * @throws InvalidNameException
+     * @throws DBALException
      */
-    protected function checkIndexes(SchemaDiff $schemaDiff, Migration $migration)
+    protected function checkIndexes(SchemaDiff $schemaDiff, Migration $migration): void
     {
         foreach ($schemaDiff->newTables as $table) {
             foreach ($table->getIndexes() as $index) {
@@ -292,10 +295,8 @@ class MigrationExecutor
      * @param Index $index
      * @param Migration $migration
      *
-     * @throws InvalidNameException
-     * @throws \Doctrine\DBAL\Schema\SchemaException
      */
-    protected function checkIndex(Table $table, Index $index, Migration $migration)
+    protected function checkIndex(Table $table, Index $index, Migration $migration): void
     {
     }
 
@@ -303,12 +304,12 @@ class MigrationExecutor
      * @param TableDiff $diff
      *
      * @return Table
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    protected function getTableFromDiff(TableDiff $diff)
+    protected function getTableFromDiff(TableDiff $diff): Table
     {
         $changedColumns = array_map(
-            function (ColumnDiff $columnDiff) {
+            static function (ColumnDiff $columnDiff) {
                 return $columnDiff->column;
             },
             $diff->changedColumns
@@ -324,9 +325,9 @@ class MigrationExecutor
 
     /**
      * @return Schema
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    protected function getActualSchema()
+    protected function getActualSchema(): Schema
     {
         $platform = $this->queryExecutor->getConnection()->getDatabasePlatform();
         $sm = $this->queryExecutor->getConnection()->getSchemaManager();

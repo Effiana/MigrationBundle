@@ -7,8 +7,13 @@ use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\ORMException;
 
-abstract class AbstractEntityReferenceFixture extends AbstractFixture implements FixtureInterface
+/**
+ * Class AbstractEntityReferenceFixture
+ * @package Effiana\MigrationBundle\Fixture
+ */
+abstract class AbstractEntityReferenceFixture extends AbstractFixture
 {
     /**
      * Returns array of object references.
@@ -16,9 +21,10 @@ abstract class AbstractEntityReferenceFixture extends AbstractFixture implements
      * @param ObjectManager $objectManager
      * @param string $className
      * @return array
+     * @throws ORMException
      * @see getObjectReferencesByIds
      */
-    protected function getObjectReferences(ObjectManager $objectManager, $className)
+    protected function getObjectReferences(ObjectManager $objectManager, $className): array
     {
         $identifier = $objectManager->getClassMetadata($className)->getIdentifier();
         $idField    = reset($identifier);
@@ -48,8 +54,9 @@ abstract class AbstractEntityReferenceFixture extends AbstractFixture implements
      * @param string $className
      * @param array $ids
      * @return array
+     * @throws ORMException
      */
-    protected function getObjectReferencesByIds(ObjectManager $objectManager, $className, array $ids)
+    protected function getObjectReferencesByIds(ObjectManager $objectManager, $className, array $ids): array
     {
         $entities = [];
 

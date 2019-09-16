@@ -2,19 +2,49 @@
 
 namespace Effiana\MigrationBundle\Command;
 
+use Doctrine\DBAL\DBALException;
 use Effiana\MigrationBundle\Migration\Loader\MigrationsLoader;
 use Effiana\MigrationBundle\Migration\MigrationExecutor;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Effiana\MigrationBundle\Migration\MigrationExecutorWithNameGenerator;
 
-class LoadMigrationsCommand extends ContainerAwareCommand
+/**
+ * Class LoadMigrationsCommand
+ * @package Effiana\MigrationBundle\Command
+ */
+class LoadMigrationsCommand extends Command
 {
+    /**
+     * @var MigrationExecutorWithNameGenerator
+     */
+    private $executorWithNameGenerator;
+    /**
+     * @var MigrationsLoader
+     */
+    private $migrationsLoader;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    public function __construct(MigrationExecutorWithNameGenerator $executorWithNameGenerator,
+                                MigrationsLoader $migrationsLoader, LoggerInterface $logger)
+    {
+        parent::__construct();
+        $this->executorWithNameGenerator = $executorWithNameGenerator;
+        $this->migrationsLoader = $migrationsLoader;
+        $this->logger = $logger;
+    }
+
     /**
      * @inheritdoc
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('effiana:migration:load')
             ->setDescription('Execute migration scripts.')
@@ -59,7 +89,10 @@ class LoadMigrationsCommand extends ContainerAwareCommand
 
     /**
      * @inheritdoc
-     * @throws \Doctrine\DBAL\DBALException
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @throws DBALException
+     * @throws \ReflectionException
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
@@ -78,7 +111,7 @@ class LoadMigrationsCommand extends ContainerAwareCommand
                     }
                 } else {
                     $executor    = $this->getMigrationExecutor($input);
-                    $executor->setLogger($this->getContainer()->get('logger'));
+                    $executor->setLogger($this->logger);
                     $executor->executeUp($migrations, $input->getOption('dry-run'));
                 }
             }
@@ -96,27 +129,26 @@ class LoadMigrationsCommand extends ContainerAwareCommand
      * @param InputInterface $input
      * @return MigrationsLoader
      */
-    protected function getMigrationLoader(InputInterface $input)
+    protected function getMigrationLoader(InputInterface $input): MigrationsLoader
     {
-        $migrationLoader = $this->getContainer()->get('effiana_migration.migrations.loader');
         $bundles         = $input->getOption('bundles');
         if (!empty($bundles)) {
-            $migrationLoader->setBundles($bundles);
+            $this->migrationsLoader->setBundles($bundles);
         }
         $excludeBundles = $input->getOption('exclude');
         if (!empty($excludeBundles)) {
-            $migrationLoader->setExcludeBundles($excludeBundles);
+            $this->migrationsLoader->setExcludeBundles($excludeBundles);
         }
 
-        return $migrationLoader;
+        return $this->migrationsLoader;
     }
 
     /**
      * @param InputInterface $input
      * @return MigrationExecutor
      */
-    protected function getMigrationExecutor(InputInterface $input)
+    protected function getMigrationExecutor(InputInterface $input): MigrationExecutor
     {
-        return $this->getContainer()->get('effiana_migration.migrations.executor');
+        return $this->executorWithNameGenerator;
     }
 }

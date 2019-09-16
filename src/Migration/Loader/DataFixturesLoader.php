@@ -2,6 +2,7 @@
 
 namespace Effiana\MigrationBundle\Migration\Loader;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Effiana\MigrationBundle\Entity\DataFixture;
 use Effiana\MigrationBundle\Fixture\LoadedFixtureVersionAwareInterface;
 use Effiana\MigrationBundle\Fixture\VersionedFixtureInterface;
@@ -10,6 +11,7 @@ use Effiana\MigrationBundle\Migration\UpdateDataFixturesFixture;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bridge\Doctrine\DataFixtures\ContainerAwareLoader;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\Common\DataFixtures\Loader;
 
 /**
  * Class DataFixturesLoader
@@ -29,10 +31,10 @@ class DataFixturesLoader extends ContainerAwareLoader
     /**
      * Constructor.
      *
-     * @param EntityManager      $em
+     * @param EntityManagerInterface $em
      * @param ContainerInterface $container
      */
-    public function __construct(EntityManager $em, ContainerInterface $container)
+    public function __construct(EntityManagerInterface $em, ContainerInterface $container)
     {
         parent::__construct($container);
 
@@ -42,7 +44,7 @@ class DataFixturesLoader extends ContainerAwareLoader
     /**
      * @inheritdoc
      */
-    public function getFixtures()
+    public function getFixtures(): array
     {
         $sorter   = new DataFixturesSorter();
         $fixtures = $sorter->sort($this->getAllFixtures());
@@ -80,7 +82,7 @@ class DataFixturesLoader extends ContainerAwareLoader
      *
      * @return bool
      */
-    protected function isFixtureAlreadyLoaded($fixtureObject)
+    protected function isFixtureAlreadyLoaded($fixtureObject): bool
     {
         if (!$this->loadedFixtures) {
             $this->loadedFixtures = [];
@@ -98,7 +100,7 @@ class DataFixturesLoader extends ContainerAwareLoader
             $alreadyLoaded = true;
             $loadedVersion = $this->loadedFixtures[get_class($fixtureObject)];
             if ($fixtureObject instanceof VersionedFixtureInterface
-                && version_compare($loadedVersion, $fixtureObject->getVersion()) == -1
+                && version_compare($loadedVersion, $fixtureObject->getVersion()) === -1
             ) {
                 if ($fixtureObject instanceof LoadedFixtureVersionAwareInterface) {
                     $fixtureObject->setLoadedVersion($loadedVersion);
@@ -114,10 +116,10 @@ class DataFixturesLoader extends ContainerAwareLoader
      * @return array
      * @throws \ReflectionException
      */
-    protected function getAllFixtures()
+    protected function getAllFixtures(): array
     {
         if (!$this->ref) {
-            $this->ref = new \ReflectionProperty('Doctrine\Common\DataFixtures\Loader', 'fixtures');
+            $this->ref = new \ReflectionProperty(Loader::class, 'fixtures');
             $this->ref->setAccessible(true);
         }
 

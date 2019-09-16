@@ -13,6 +13,7 @@ declare(strict_types=0);
 
 namespace Effiana\MigrationBundle\DependencyInjection\Compiler;
 
+use Effiana\MigrationBundle\Container\MigrationContainer;
 use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -30,9 +31,9 @@ class ServiceContainerWeakRefPass implements CompilerPassInterface
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
-        if (!$container->hasDefinition('effiana_migration.service_container')) {
+        if (!$container->hasDefinition(MigrationContainer::class)) {
             return;
         }
         $privateServices = [];
@@ -61,7 +62,7 @@ class ServiceContainerWeakRefPass implements CompilerPassInterface
             }
         }
         if ($privateServices) {
-            $definition = $definitions[(string) $definitions['effiana_migration.service_container']->getArgument(2)];
+            $definition = $definitions[(string) $definitions[MigrationContainer::class]->getArgument(2)];
             $definition->replaceArgument(0, $privateServices);
         }
     }

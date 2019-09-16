@@ -17,7 +17,7 @@ class Schema extends BaseSchema
      * Important: your class must extend Effiana\MigrationBundle\Migration\Schema\Table class
      *            or extend Doctrine\DBAL\Schema\Table class and must have __construct(array $args) method
      */
-    const TABLE_CLASS = 'Doctrine\DBAL\Schema\Table';
+    public const TABLE_CLASS = BaseTable::class;
 
     /**
      * Creates an instance of TABLE_CLASS class
@@ -26,7 +26,7 @@ class Schema extends BaseSchema
      *                    An instance of a base table is in 'table' element
      * @return BaseTable
      */
-    protected function createTableObject(array $args)
+    protected function createTableObject(array $args): BaseTable
     {
         $tableClass = static::TABLE_CLASS;
 
@@ -36,7 +36,7 @@ class Schema extends BaseSchema
     /**
      * {@inheritdoc}
      */
-    public function createTable($tableName)
+    public function createTable($tableName): BaseTable
     {
         parent::createTable($tableName);
 
@@ -47,9 +47,9 @@ class Schema extends BaseSchema
      * {@inheritdoc}
      */
     // @codingStandardsIgnoreStart
-    protected function _addTable(BaseTable $table)
+    protected function _addTable(BaseTable $table): void
     {
-        if (get_class($table) !== static::TABLE_CLASS && static::TABLE_CLASS !== 'Doctrine\DBAL\Schema\Table') {
+        if (static::TABLE_CLASS !== 'Doctrine\DBAL\Schema\Table' && get_class($table) !== static::TABLE_CLASS) {
             $table = $this->createTableObject(['table' => $table]);
         }
         parent::_addTable($table);

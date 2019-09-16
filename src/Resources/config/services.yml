@@ -1,20 +1,13 @@
-parameters:
-    effiana_migration.db_id_name_generator.class:            Effiana\MigrationBundle\Tools\DbIdentifierNameGenerator
-    effiana_migration.data_fixtures.loader.class:            Effiana\MigrationBundle\Migration\Loader\DataFixturesLoader
-    effiana_migration.migrations.loader.class:               Effiana\MigrationBundle\Migration\Loader\MigrationsLoader
-    effiana_migration.migrations.query_executor.class:       Effiana\MigrationBundle\Migration\MigrationQueryExecutor
-    effiana_migration.migrations.executor.class:             Effiana\MigrationBundle\Migration\MigrationExecutorWithNameGenerator
-    effiana_migration.migration.pre_up.listener.class:       Effiana\MigrationBundle\EventListener\PreUpMigrationListener
-    effiana_migration.migrations.extension_manager.class:    Effiana\MigrationBundle\Migration\MigrationExtensionManager
-    effiana_migration.migration.extension.rename.class:      Effiana\MigrationBundle\Migration\Extension\RenameExtension
-    effiana_migration.tools.schema_dumper.class:             Effiana\MigrationBundle\Tools\SchemaDumper
-    effiana_migration.migration.extension.data_storage.class: Effiana\MigrationBundle\Migration\Extension\DataStorageExtension
 services:
-    effiana_migration.db_id_name_generator:
-        class: '%effiana_migration.db_id_name_generator.class%'
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        public: false       # Allows optimizing the container by removing unused services; this also means
 
-    effiana_migration.service_container:
-        class: Effiana\MigrationBundle\Container\MigrationContainer
+    Effiana\MigrationBundle\Tools\DbIdentifierNameGenerator: ~
+
+    Effiana\MigrationBundle\Container\MigrationContainer:
         public: false
         arguments:
             - '@?parameter_bag'
@@ -22,82 +15,48 @@ services:
             - !service
                 class: Symfony\Component\DependencyInjection\ServiceLocator
                 arguments: [[]]
-    effiana_migration.data_fixtures.loader:
+    Effiana\MigrationBundle\Migration\Loader\DataFixturesLoader:
         public: true
-        class: '%effiana_migration.data_fixtures.loader.class%'
-        arguments:
-            - '@doctrine.orm.entity_manager'
-            - '@effiana_migration.service_container'
 
-    effiana_migration.data_fixtures.executor:
-        public: true
+    Effiana\MigrationBundle\Migration\DataFixturesExecutorInterface:
         class: Effiana\MigrationBundle\Migration\DataFixturesExecutor
-        arguments:
-            - '@doctrine.orm.entity_manager'
-            - '@event_dispatcher'
 
-    effiana_migration.migrations.loader:
+    Effiana\MigrationBundle\Migration\Loader\MigrationsLoader:
         public: true
-        class: '%effiana_migration.migrations.loader.class%'
-        arguments:
-            - '@kernel'
-            - '@doctrine.dbal.default_connection'
-            - '@effiana_migration.service_container'
-            - '@event_dispatcher'
 
-    effiana_migration.migrations.query_executor:
-        class: '%effiana_migration.migrations.query_executor.class%'
-        arguments:
-            - '@doctrine.dbal.default_connection'
-        calls:
-        - [setLogger, ['@logger']]
-    effiana_migration.migrations.executor:
+    Effiana\MigrationBundle\Migration\MigrationQueryExecutor: ~
+
+    Effiana\MigrationBundle\Migration\MigrationExecutorWithNameGenerator:
         public: true
-        class: '%effiana_migration.migrations.executor.class%'
-        arguments:
-            - '@effiana_migration.migrations.query_executor'
         calls:
-            - [setExtensionManager, ['@effiana_migration.migrations.extension_manager']]
-            - [setNameGenerator, ['@effiana_migration.db_id_name_generator']]
+            - [setExtensionManager, ['@Effiana\MigrationBundle\Migration\MigrationExtensionManager']]
+            - [setNameGenerator, ['@Effiana\MigrationBundle\Tools\DbIdentifierNameGenerator']]
 
-    effiana_migration.migration.pre_up.listener:
-        class: '%effiana_migration.migration.pre_up.listener.class%'
+    Effiana\MigrationBundle\EventListener\PreUpMigrationListener:
         tags:
             - { name: kernel.event_listener, event: effiana_migration.pre_up, method: onPreUp }
 
-    effiana_migration.migrations.extension_manager:
-        class: '%effiana_migration.migrations.extension_manager.class%'
+    Effiana\MigrationBundle\Migration\MigrationExtensionManager: ~
 
-    effiana_migration.migration.extension.rename:
-        class: '%effiana_migration.migration.extension.rename.class%'
+    Effiana\MigrationBundle\Migration\Extension\RenameExtension:
         tags:
             - { name: effiana_migration.extension, extension_name: rename }
 
-    effiana_migration.migration.extension.data_storage:
-        class: '%effiana_migration.migration.extension.data_storage.class%'
+    Effiana\MigrationBundle\Migration\Extension\DataStorageExtension:
         tags:
             - { name: effiana_migration.extension, extension_name: data_store }
 
-    effiana_migration.tools.schema_dumper:
-        public: true
-        class: '%effiana_migration.tools.schema_dumper.class%'
-        arguments:
-            - '@twig'
+    Effiana\MigrationBundle\Tools\SchemaDumper:
         lazy: true
 
-    effiana_migration.twig.schema_dumper:
-        class: Effiana\MigrationBundle\Twig\SchemaDumperExtension
+    Effiana\MigrationBundle\Twig\SchemaDumperExtension:
         public: false
-        arguments:
-            - '@doctrine'
         tags:
             - { name: twig.extension }
 
-    effiana_migration.listener.console_command_listener:
-        class: Effiana\MigrationBundle\EventListener\ConsoleCommandListener
+    Effiana\MigrationBundle\EventListener\ConsoleCommandListener:
         tags:
             - { name: kernel.event_listener, event: console.command, method: onConsoleCommand }
 
-    effiana_migration.locator.fixture_path_locator:
-        public: true
+    Effiana\MigrationBundle\Locator\FixturePathLocatorInterface:
         class: Effiana\MigrationBundle\Locator\FixturePathLocator

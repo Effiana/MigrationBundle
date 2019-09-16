@@ -9,7 +9,7 @@
  *
  * @author Dominik Labudzinski <dominik@labudzinski.com>
  */
-declare(strict_types=0);
+declare(strict_types=1);
 
 namespace Effiana\MigrationBundle\Container;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
@@ -38,40 +38,51 @@ class MigrationContainer extends DependencyInjectionContainer
         DependencyInjectionContainer $publicContainer,
         PsrContainerInterface $privateContainer
     ) {
-        $this->parameterBag = $parameterBag ?? $publicContainer->getParameterBag();
+        $parameterBag = $parameterBag ?? $publicContainer->getParameterBag();
+        parent::__construct($parameterBag);
         $this->publicContainer = $publicContainer;
         $this->privateContainer = $privateContainer;
     }
+
     /**
-     * {@inheritdoc}
+     *
      */
-    public function compile()
+    public function compile(): void
     {
         $this->publicContainer->compile();
     }
+
     /**
-     * {@inheritdoc}
+     * @return bool
      */
-    public function isCompiled()
+    public function isCompiled(): bool
     {
         return $this->publicContainer->isCompiled();
     }
+
     /**
-     * {@inheritdoc}
+     * @param string $id
+     * @param object|null $service
      */
-    public function set($id, $service)
+    public function set($id, $service): void
     {
         $this->publicContainer->set($id, $service);
     }
+
     /**
-     * {@inheritdoc}
+     * @param string $id
+     * @return bool
      */
-    public function has($id)
+    public function has($id): bool
     {
         return $this->publicContainer->has($id) || $this->privateContainer->has($id);
     }
+
     /**
-     * {@inheritdoc}
+     * @param string $id
+     * @param int $invalidBehavior
+     * @return mixed|object|null
+     * @throws \Exception
      */
     public function get($id, $invalidBehavior = /* self::EXCEPTION_ON_INVALID_REFERENCE */ 1)
     {
@@ -79,31 +90,35 @@ class MigrationContainer extends DependencyInjectionContainer
             ? $this->privateContainer->get($id)
             : $this->publicContainer->get($id, $invalidBehavior);
     }
+
     /**
-     * {@inheritdoc}
+     * @param string $id
+     * @return bool
      */
-    public function initialized($id)
+    public function initialized($id): bool
     {
         return $this->publicContainer->initialized($id);
     }
     /**
      * {@inheritdoc}
      */
-    public function reset()
+    public function reset(): void
     {
         $this->publicContainer->reset();
     }
+
     /**
-     * {@inheritdoc}
+     * @return string[]
      */
-    public function getServiceIds()
+    public function getServiceIds(): array
     {
         return $this->publicContainer->getServiceIds();
     }
+
     /**
-     * {@inheritdoc}
+     * @return array
      */
-    public function getRemovedIds()
+    public function getRemovedIds(): array
     {
         return $this->publicContainer->getRemovedIds();
     }

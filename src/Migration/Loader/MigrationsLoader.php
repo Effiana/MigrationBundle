@@ -12,11 +12,13 @@ use Effiana\MigrationBundle\Migration\UpdateBundleVersionMigration;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Effiana\MigrationBundle\Migration\Migration;
 
 /**
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -62,15 +64,21 @@ class MigrationsLoader
      * @var array An array with excluded bundles
      */
     protected $excludeBundles;
+    /**
+     * @var ParameterBagInterface
+     */
+    private $parameterBag;
 
     /**
-     * @param KernelInterface          $kernel
-     * @param Connection               $connection
-     * @param ContainerInterface       $container
+     * @param KernelInterface $kernel
+     * @param ParameterBagInterface $parameterBag
+     * @param Connection $connection
+     * @param ContainerInterface $container
      * @param EventDispatcherInterface $eventDispatcher
      */
     public function __construct(
         KernelInterface $kernel,
+        ParameterBagInterface $parameterBag,
         Connection $connection,
         ContainerInterface $container,
         EventDispatcherInterface $eventDispatcher
@@ -79,12 +87,13 @@ class MigrationsLoader
         $this->connection      = $connection;
         $this->container       = $container;
         $this->eventDispatcher = $eventDispatcher;
+        $this->parameterBag = $parameterBag;
     }
 
     /**
      * @param array $bundles
      */
-    public function setBundles($bundles)
+    public function setBundles($bundles): void
     {
         $this->bundles = $bundles;
     }
@@ -92,15 +101,16 @@ class MigrationsLoader
     /**
      * @param array $excludeBundles
      */
-    public function setExcludeBundles($excludeBundles)
+    public function setExcludeBundles($excludeBundles): void
     {
         $this->excludeBundles = $excludeBundles;
     }
 
     /**
-     * @return MigrationState[]
+     * @return MigrationState[]|array
+     * @throws \ReflectionException
      */
-    public function getMigrations()
+    public function getMigrations(): array
     {
         $result = [];
 
@@ -146,7 +156,7 @@ class MigrationsLoader
      *      .            or empty string for root migration directory
      *      .    value = full path to a migration directory
      */
-    protected function getMigrationDirectories()
+    protected function getMigrationDirectories(): array
     {
         $result = [];
 
@@ -169,7 +179,7 @@ class MigrationsLoader
         $appMigrationPath = str_replace(
             '/',
             DIRECTORY_SEPARATOR,
-            $this->kernel->getRootDir() . '/' . self::MIGRATIONS_PATH
+            $this->parameterBag->get('kernel.project_dir') . '/src/App/' . self::MIGRATIONS_PATH
         );
         $bundleMigrationDirectories = $this->getMigrationsPath($appMigrationPath);
         if($bundleMigrationDirectories !== null) {
@@ -199,7 +209,7 @@ class MigrationsLoader
      *               .      value = bundle name
      *               'bundles'    => string[] names of bundles
      */
-    protected function loadMigrationScripts(array $migrationDirectories)
+    protected function loadMigrationScripts(array $migrationDirectories): array
     {
         $migrations = [];
         $installers = [];
@@ -211,7 +221,6 @@ class MigrationsLoader
                 foreach ($fileFinder as $file) {
                     /** @var SplFileInfo $file */
                     $filePath = $file->getPathname();
-
                     include_once $filePath;
                     if (empty($migrationVersion)) {
                         $installers[$filePath] = $bundleName;
@@ -233,7 +242,7 @@ class MigrationsLoader
      * Creates an instances of all classes implement migration scripts
      *
      * @param MigrationState[] $result
-     * @param array            $files Files contain migration scripts
+     * @param array $files Files contain migration scripts
      *                                'migrations' => array
      *                                .      key   = full file path
      *                                .      value = array
@@ -244,12 +253,12 @@ class MigrationsLoader
      *                                .      value = bundle name
      *                                'bundles'    => string[] names of bundles
      *
-     * @throws \RuntimeException if a migration script contains more than one class
+     * @throws \ReflectionException
      */
-    protected function createMigrationObjects(&$result, $files)
+    protected function createMigrationObjects(&$result, $files): void
     {
         // load migration objects
-        list($migrations, $installers) = $this->loadMigrationObjects($files);
+        [$migrations, $installers] = $this->loadMigrationObjects($files);
 
         // remove versioned migrations covered by installers
         foreach ($installers as $installer) {
@@ -305,7 +314,7 @@ class MigrationsLoader
      *
      * @return array
      */
-    protected function groupAndSortMigrations($files, $migrations)
+    protected function groupAndSortMigrations($files, $migrations): array
     {
         $groupedMigrations = [];
         foreach ($files['migrations'] as $sourceFile => $migration) {
@@ -327,7 +336,7 @@ class MigrationsLoader
                 if (count($versionedMigrations) > 1) {
                     usort(
                         $groupedMigrations[$bundleName][$version],
-                        function ($a, $b) {
+                        static function ($a, $b) {
                             $aOrder = 0;
                             if ($a instanceof OrderedMigrationInterface) {
                                 $aOrder = $a->getOrder();
@@ -340,11 +349,13 @@ class MigrationsLoader
 
                             if ($aOrder === $bOrder) {
                                 return 0;
-                            } elseif ($aOrder < $bOrder) {
-                                return -1;
-                            } else {
-                                return 1;
                             }
+
+                            if ($aOrder < $bOrder) {
+                                return -1;
+                            }
+
+                            return 1;
                         }
                     );
                 }
@@ -361,9 +372,9 @@ class MigrationsLoader
      * @param $files
      *
      * @return array
-     * @throws \RuntimeException
+     * @throws \ReflectionException
      */
-    protected function loadMigrationObjects($files)
+    protected function loadMigrationObjects($files): array
     {
         $migrations = [];
         $installers = [];
@@ -374,7 +385,7 @@ class MigrationsLoader
             $sourceFile = $reflClass->getFileName();
             if (isset($files['migrations'][$sourceFile])) {
 
-                if (is_subclass_of($className, 'Effiana\MigrationBundle\Migration\Migration')) {
+                if (is_subclass_of($className, Migration::class)) {
                     $migration = new $className;
                     if (isset($migrations[$sourceFile])) {
                         throw new \RuntimeException('A migration script must contains only one class.');
@@ -385,7 +396,8 @@ class MigrationsLoader
                     $migrations[$sourceFile] = $migration;
                 }
             } elseif (isset($files['installers'][$sourceFile])) {
-                if (is_subclass_of($className, 'Effiana\MigrationBundle\Migration\Installation')) {
+                if (is_subclass_of($className, Installation::class)) {
+                    /** @var Installation $installer */
                     $installer = new $className;
                     if (isset($migrations[$sourceFile])) {
                         throw new \RuntimeException('An installation  script must contains only one class.');
@@ -418,13 +430,11 @@ class MigrationsLoader
      *      .    key   = a migration version or empty string for root migration directory
      *      .    value = full path to a migration directory
      */
-    protected function filterMigrations(array &$migrationDirectories)
+    protected function filterMigrations(array &$migrationDirectories): void
     {
         if (!empty($this->loadedVersions)) {
             foreach ($migrationDirectories as $bundleName => $bundleMigrationDirectories) {
-                $loadedVersion = isset($this->loadedVersions[$bundleName])
-                    ? $this->loadedVersions[$bundleName]
-                    : null;
+                $loadedVersion = $this->loadedVersions[$bundleName] ?? null;
                 if ($loadedVersion) {
                     foreach (array_keys($bundleMigrationDirectories) as $migrationVersion) {
                         if (empty($migrationVersion) || version_compare($migrationVersion, $loadedVersion) < 1) {
@@ -439,7 +449,7 @@ class MigrationsLoader
     /**
      * @return BundleInterface[] key = bundle name
      */
-    protected function getBundleList()
+    protected function getBundleList(): array
     {
         $bundles = $this->kernel->getBundles();
         if (!empty($this->bundles)) {
@@ -464,7 +474,7 @@ class MigrationsLoader
      * @param $bundleMigrationPath
      * @return array|null
      */
-    protected function getMigrationsPath($bundleMigrationPath)
+    protected function getMigrationsPath($bundleMigrationPath): ?array
     {
         if (is_dir($bundleMigrationPath)) {
             $bundleMigrationDirectories = [];
@@ -482,7 +492,7 @@ class MigrationsLoader
             if (!empty($bundleMigrationDirectories)) {
                 uksort(
                     $bundleMigrationDirectories,
-                    function ($a, $b) {
+                    static function ($a, $b) {
                         return version_compare($a, $b);
                     }
                 );

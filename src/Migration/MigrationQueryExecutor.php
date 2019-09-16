@@ -3,6 +3,7 @@
 namespace Effiana\MigrationBundle\Migration;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
 use Psr\Log\LoggerInterface;
 
 class MigrationQueryExecutor
@@ -19,19 +20,11 @@ class MigrationQueryExecutor
 
     /**
      * @param Connection $connection
-     */
-    public function __construct(Connection $connection)
-    {
-        $this->connection = $connection;
-    }
-
-    /**
-     * Sets a logger
-     *
      * @param LoggerInterface $logger
      */
-    public function setLogger(LoggerInterface $logger)
+    public function __construct(Connection $connection, LoggerInterface $logger)
     {
+        $this->connection = $connection;
         $this->logger = $logger;
     }
 
@@ -40,7 +33,7 @@ class MigrationQueryExecutor
      *
      * @return Connection
      */
-    public function getConnection()
+    public function getConnection(): Connection
     {
         return $this->connection;
     }
@@ -49,9 +42,10 @@ class MigrationQueryExecutor
      * Executes the given query
      *
      * @param string|MigrationQuery $query
-     * @param bool                  $dryRun
+     * @param bool $dryRun
+     * @throws DBALException
      */
-    public function execute($query, $dryRun)
+    public function execute($query, $dryRun): void
     {
         if ($query instanceof MigrationQuery) {
             if ($query instanceof ConnectionAwareInterface) {

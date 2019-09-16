@@ -12,7 +12,11 @@
 
 namespace Effiana\MigrationBundle\Migration\Schema;
 
+use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint;
+use Doctrine\DBAL\Schema\Sequence;
+use Doctrine\DBAL\Schema\TableDiff;
 
 class SchemaDiff
 {
@@ -26,65 +30,65 @@ class SchemaDiff
      *
      * @var string[]
      */
-    public $newNamespaces = array();
+    public $newNamespaces = [];
 
     /**
      * All removed namespaces.
      *
      * @var string[]
      */
-    public $removedNamespaces = array();
+    public $removedNamespaces = [];
 
     /**
      * All added tables.
      *
      * @var \Doctrine\DBAL\Schema\Table[]
      */
-    public $newTables = array();
+    public $newTables = [];
 
     /**
      * All changed tables.
      *
-     * @var \Doctrine\DBAL\Schema\TableDiff[]
+     * @var TableDiff[]
      */
-    public $changedTables = array();
+    public $changedTables = [];
 
     /**
      * All removed tables.
      *
      * @var \Doctrine\DBAL\Schema\Table[]
      */
-    public $removedTables = array();
+    public $removedTables = [];
 
     /**
-     * @var \Doctrine\DBAL\Schema\Sequence[]
+     * @var Sequence[]
      */
-    public $newSequences = array();
+    public $newSequences = [];
 
     /**
-     * @var \Doctrine\DBAL\Schema\Sequence[]
+     * @var Sequence[]
      */
-    public $changedSequences = array();
+    public $changedSequences = [];
 
     /**
-     * @var \Doctrine\DBAL\Schema\Sequence[]
+     * @var Sequence[]
      */
-    public $removedSequences = array();
+    public $removedSequences = [];
 
     /**
-     * @var \Doctrine\DBAL\Schema\ForeignKeyConstraint[]
+     * @var ForeignKeyConstraint[]
      */
-    public $orphanedForeignKeys = array();
+    public $orphanedForeignKeys = [];
 
     /**
      * Constructs an SchemaDiff object.
      *
      * @param \Doctrine\DBAL\Schema\Table[]     $newTables
-     * @param \Doctrine\DBAL\Schema\TableDiff[] $changedTables
+     * @param TableDiff[] $changedTables
      * @param \Doctrine\DBAL\Schema\Table[]     $removedTables
      * @param \Doctrine\DBAL\Schema\Schema|null $fromSchema
      */
-    public function __construct($newTables = array(), $changedTables = array(), $removedTables = array(), $fromSchema = null)
+    public function __construct($newTables = [], $changedTables = [], $removedTables = [], $fromSchema = null)
     {
         $this->newTables     = $newTables;
         $this->changedTables = $changedTables;
@@ -101,21 +105,23 @@ class SchemaDiff
      *
      * This way it is ensured that assets are deleted which might not be relevant to the metadata schema at all.
      *
-     * @param \Doctrine\DBAL\Platforms\AbstractPlatform $platform
+     * @param AbstractPlatform $platform
      *
      * @return array
+     * @throws DBALException
      */
-    public function toSaveSql(AbstractPlatform $platform)
+    public function toSaveSql(AbstractPlatform $platform): array
     {
         return $this->_toSql($platform, true);
     }
 
     /**
-     * @param \Doctrine\DBAL\Platforms\AbstractPlatform $platform
+     * @param AbstractPlatform $platform
      *
      * @return array
+     * @throws DBALException
      */
-    public function toSql(AbstractPlatform $platform)
+    public function toSql(AbstractPlatform $platform): array
     {
         return $this->_toSql($platform, false);
     }
@@ -124,17 +130,18 @@ class SchemaDiff
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      *
-     * @param \Doctrine\DBAL\Platforms\AbstractPlatform $platform
-     * @param boolean                                   $saveMode
+     * @param AbstractPlatform $platform
+     * @param boolean $saveMode
      *
      * @return array
+     * @throws DBALException
      */
-    protected function _toSql(AbstractPlatform $platform, $saveMode = false)
+    protected function _toSql(AbstractPlatform $platform, $saveMode = false): array
     {
         // Disable renaming of indices
         $this->disableIndicesRenaming();
 
-        $sql = array();
+        $sql = [];
 
         if ($platform->supportsSchemas()) {
             foreach ($this->newNamespaces as $newNamespace) {
@@ -142,13 +149,13 @@ class SchemaDiff
             }
         }
 
-        if ($platform->supportsForeignKeyConstraints() && $saveMode == false) {
+        if ($saveMode === false && $platform->supportsForeignKeyConstraints()) {
             foreach ($this->orphanedForeignKeys as $orphanedForeignKey) {
                 $sql[] = $platform->getDropForeignKeySQL($orphanedForeignKey, $orphanedForeignKey->getLocalTableName());
             }
         }
 
-        if ($platform->supportsSequences() == true) {
+        if ($platform->supportsSequences() === true) {
             foreach ($this->changedSequences as $sequence) {
                 $sql[] = $platform->getAlterSequenceSQL($sequence);
             }
@@ -164,19 +171,17 @@ class SchemaDiff
             }
         }
 
-        $foreignKeySql = array();
+        $foreignKeySql = [];
+        $tableSql = [];
         foreach ($this->newTables as $table) {
-            $sql = array_merge(
-                $sql,
-                $platform->getCreateTableSQL($table, AbstractPlatform::CREATE_INDEXES)
-            );
-
+            $tableSql[] = $platform->getCreateTableSQL($table, AbstractPlatform::CREATE_INDEXES);
             if ($platform->supportsForeignKeyConstraints()) {
                 foreach ($table->getForeignKeys() as $foreignKey) {
                     $foreignKeySql[] = $platform->getCreateForeignKeySQL($foreignKey, $table);
                 }
             }
         }
+        $sql = array_merge($sql, array_merge(...$tableSql));
         $sql = array_merge($sql, $foreignKeySql);
 
         if ($saveMode === false) {
@@ -184,15 +189,16 @@ class SchemaDiff
                 $sql[] = $platform->getDropTableSQL($table);
             }
         }
-
+        $tableSql = [];
         foreach ($this->changedTables as $tableDiff) {
-            $sql = array_merge($sql, $platform->getAlterTableSQL($tableDiff));
+            $tableSql[] = $platform->getAlterTableSQL($tableDiff);
         }
+        $sql = array_merge($sql, array_merge(...$tableSql));
 
         return $sql;
     }
 
-    protected function disableIndicesRenaming()
+    protected function disableIndicesRenaming(): void
     {
         foreach ($this->changedTables as $table) {
             $table->renamedIndexes = [];

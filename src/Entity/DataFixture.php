@@ -43,7 +43,7 @@ class DataFixture
     /**
      * @return int
      */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
@@ -51,7 +51,7 @@ class DataFixture
     /**
      * @return string
      */
-    public function getClassName()
+    public function getClassName(): ?string
     {
         return $this->className;
     }
@@ -60,7 +60,7 @@ class DataFixture
      * @param string $className
      * @return $this
      */
-    public function setClassName($className)
+    public function setClassName($className): self
     {
         $this->className = $className;
 
@@ -70,7 +70,7 @@ class DataFixture
     /**
      * @return \DateTime
      */
-    public function getLoadedAt()
+    public function getLoadedAt(): ?\DateTime
     {
         return $this->loadedAt;
     }
@@ -79,7 +79,7 @@ class DataFixture
      * @param \DateTime $loadedAt
      * @return $this
      */
-    public function setLoadedAt($loadedAt)
+    public function setLoadedAt($loadedAt): self
     {
         $this->loadedAt = $loadedAt;
 
@@ -90,7 +90,7 @@ class DataFixture
      * @param string $version
      * @return $this
      */
-    public function setVersion($version)
+    public function setVersion($version): self
     {
         $this->version = $version;
 
@@ -100,7 +100,7 @@ class DataFixture
     /**
      * @return string
      */
-    public function getVersion()
+    public function getVersion(): ?string
     {
         return $this->version;
     }

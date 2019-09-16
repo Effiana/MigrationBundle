@@ -2,6 +2,7 @@
 
 namespace Effiana\MigrationBundle\Migration;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Effiana\MigrationBundle\Event\MigrationDataFixturesEvent;
 use Effiana\MigrationBundle\Event\MigrationEvents;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
@@ -23,10 +24,10 @@ class DataFixturesExecutor implements DataFixturesExecutorInterface
     private $logger;
 
     /**
-     * @param EntityManager            $em
+     * @param EntityManagerInterface $em
      * @param EventDispatcherInterface $eventDispatcher
      */
-    public function __construct(EntityManager $em, EventDispatcherInterface $eventDispatcher)
+    public function __construct(EntityManagerInterface $em, EventDispatcherInterface $eventDispatcher)
     {
         $this->em = $em;
         $this->eventDispatcher = $eventDispatcher;
@@ -35,7 +36,7 @@ class DataFixturesExecutor implements DataFixturesExecutorInterface
     /**
      * {@inheritdoc}
      */
-    public function execute(array $fixtures, $fixturesType)
+    public function execute(array $fixtures, $fixturesType): void
     {
         $event = new MigrationDataFixturesEvent($this->em, $fixturesType, $this->logger);
         $this->eventDispatcher->dispatch($event, MigrationEvents::DATA_FIXTURES_PRE_LOAD);
@@ -52,7 +53,7 @@ class DataFixturesExecutor implements DataFixturesExecutorInterface
     /**
      * {@inheritdoc}
      */
-    public function setLogger($logger)
+    public function setLogger($logger): void
     {
         $this->logger = $logger;
     }

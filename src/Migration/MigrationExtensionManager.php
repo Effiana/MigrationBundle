@@ -10,7 +10,7 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 class MigrationExtensionManager
 {
-    const EXTENSION_AWARE_INTERFACE_SUFFIX = 'AwareInterface';
+    private const EXTENSION_AWARE_INTERFACE_SUFFIX = 'AwareInterface';
 
     /**
      * @var array {extension name} => [{extension}, {extension aware interface name}, {set extension method name}]

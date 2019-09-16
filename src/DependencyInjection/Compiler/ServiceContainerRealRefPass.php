@@ -13,6 +13,7 @@ declare(strict_types=0);
 
 namespace Effiana\MigrationBundle\DependencyInjection\Compiler;
 
+use Effiana\MigrationBundle\Container\MigrationContainer;
 use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -27,12 +28,12 @@ class ServiceContainerRealRefPass implements CompilerPassInterface
     /**
      * {@inheritdoc}
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
-        if (!$container->hasDefinition('effiana_migration.service_container')) {
+        if (!$container->hasDefinition(MigrationContainer::class)) {
             return;
         }
-        $migrationContainer = $container->getDefinition('effiana_migration.service_container');
+        $migrationContainer = $container->getDefinition(MigrationContainer::class);
         $privateContainer = $container->getDefinition((string) $migrationContainer->getArgument(2));
         $definitions = $container->getDefinitions();
         /** @var ServiceClosureArgument $argument */

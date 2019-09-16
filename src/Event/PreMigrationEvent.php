@@ -18,7 +18,7 @@ class PreMigrationEvent extends MigrationEvent
      *      key   = bundle name
      *      value = version
      */
-    public function getLoadedVersions()
+    public function getLoadedVersions(): array
     {
         return $this->loadedVersions;
     }
@@ -29,11 +29,9 @@ class PreMigrationEvent extends MigrationEvent
      * @param string $bundleName
      * @return string|null
      */
-    public function getLoadedVersion($bundleName)
+    public function getLoadedVersion($bundleName): ?string
     {
-        return isset($this->loadedVersions[$bundleName])
-            ? $this->loadedVersions[$bundleName]
-            : null;
+        return $this->loadedVersions[$bundleName] ?? null;
     }
 
     /**
@@ -42,7 +40,7 @@ class PreMigrationEvent extends MigrationEvent
      * @param string $bundleName
      * @param string $version
      */
-    public function setLoadedVersion($bundleName, $version)
+    public function setLoadedVersion($bundleName, $version): void
     {
         $this->loadedVersions[$bundleName] = $version;
     }

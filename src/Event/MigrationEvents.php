@@ -10,7 +10,7 @@ class MigrationEvents
      *
      * @var string
      */
-    const PRE_UP = 'effiana_migration.pre_up';
+    public const PRE_UP = 'effiana_migration.pre_up';
 
     /**
      * This event is raised after a list of migrations are built.
@@ -18,19 +18,19 @@ class MigrationEvents
      *
      * @var string
      */
-    const POST_UP = 'effiana_migration.post_up';
+    public const POST_UP = 'effiana_migration.post_up';
 
     /**
      * This event is raised before data fixtures are loaded.
      *
      * @var string
      */
-    const DATA_FIXTURES_PRE_LOAD = 'effiana_migration.data_fixtures.pre_load';
+    public const DATA_FIXTURES_PRE_LOAD = 'effiana_migration.data_fixtures.pre_load';
 
     /**
      * This event is raised after data fixtures are loaded.
      *
      * @var string
      */
-    const DATA_FIXTURES_POST_LOAD = 'effiana_migration.data_fixtures.post_load';
+    public const DATA_FIXTURES_POST_LOAD = 'effiana_migration.data_fixtures.post_load';
 }

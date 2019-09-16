@@ -29,9 +29,9 @@ class FlattenTraceGraphIterator extends \ArrayIterator implements \RecursiveIter
      *
      * @return array
      */
-    public function getFlattenChildren(Node $node)
+    public function getFlattenChildren(Node $node): array
     {
-        $flatten = array();
+        $flatten = [];
         foreach ($node->getNodes() as $subNode) {
             if (count($subNode->getNodes()) > 1 || isset($subNode->getTrace()['query_source']) || !empty($subNode->getValues())) {
                 $flatten[] = $subNode;

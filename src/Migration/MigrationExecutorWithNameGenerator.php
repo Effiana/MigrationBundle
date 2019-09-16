@@ -2,10 +2,16 @@
 
 namespace Effiana\MigrationBundle\Migration;
 
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Schema\SchemaConfig;
 use Effiana\MigrationBundle\Exception\InvalidNameException;
 use Effiana\MigrationBundle\Migration\Schema\SchemaWithNameGenerator;
 use Effiana\MigrationBundle\Tools\DbIdentifierNameGenerator;
 
+/**
+ * Class MigrationExecutorWithNameGenerator
+ * @package Effiana\MigrationBundle\Migration
+ */
 class MigrationExecutorWithNameGenerator extends MigrationExecutor
 {
     /**
@@ -16,7 +22,7 @@ class MigrationExecutorWithNameGenerator extends MigrationExecutor
     /**
      * @param DbIdentifierNameGenerator $nameGenerator
      */
-    public function setNameGenerator(DbIdentifierNameGenerator $nameGenerator)
+    public function setNameGenerator(DbIdentifierNameGenerator $nameGenerator): void
     {
         $this->nameGenerator = $nameGenerator;
         if ($this->extensionManager) {
@@ -27,7 +33,7 @@ class MigrationExecutorWithNameGenerator extends MigrationExecutor
     /**
      * {@inheritdoc}
      */
-    public function setExtensionManager(MigrationExtensionManager $extensionManager)
+    public function setExtensionManager(MigrationExtensionManager $extensionManager): void
     {
         parent::setExtensionManager($extensionManager);
         if ($this->nameGenerator) {
@@ -38,7 +44,7 @@ class MigrationExecutorWithNameGenerator extends MigrationExecutor
     /**
      * {@inheritdoc}
      */
-    protected function createSchemaObject(array $tables = [], array $sequences = [], $schemaConfig = null)
+    protected function createSchemaObject(array $tables = [], array $sequences = [], ?SchemaConfig $schemaConfig = null): Schema
     {
         if ($schemaConfig && $this->nameGenerator) {
             $schemaConfig->setMaxIdentifierLength($this->nameGenerator->getMaxIdentifierSize());
@@ -55,7 +61,7 @@ class MigrationExecutorWithNameGenerator extends MigrationExecutor
     /**
      * {@inheritdoc}
      */
-    protected function checkTableName($tableName, Migration $migration)
+    protected function checkTableName($tableName, Migration $migration): void
     {
         parent::checkTableName($tableName, $migration);
         if (strlen($tableName) > $this->nameGenerator->getMaxIdentifierSize()) {
@@ -73,7 +79,7 @@ class MigrationExecutorWithNameGenerator extends MigrationExecutor
     /**
      * {@inheritdoc}
      */
-    protected function checkColumnName($tableName, $columnName, Migration $migration)
+    protected function checkColumnName($tableName, $columnName, Migration $migration): void
     {
         parent::checkColumnName($tableName, $columnName, $migration);
         if (strlen($columnName) > $this->nameGenerator->getMaxIdentifierSize()) {

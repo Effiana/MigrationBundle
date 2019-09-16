@@ -3,6 +3,7 @@
 namespace Effiana\MigrationBundle\Migration\Schema;
 
 use Doctrine\DBAL\Schema\Column as BaseColumn;
+use Doctrine\DBAL\Types\Type;
 
 /**
  * The aim of this class is to provide a way extend doctrine Column class which can be used in migrations
@@ -33,12 +34,13 @@ class Column extends BaseColumn
 
         $options = [];
         foreach ($optionNames as $name) {
-            $method = "get" . $name;
+            $method = 'get' . $name;
             $val    = $baseColumn->$method();
             if ($this->$method() !== $val) {
                 $options[$name] = $val;
             }
         }
+        parent::__construct($baseColumn->getName(), $baseColumn->getType(), $options);
         $this->_setName($baseColumn->getName());
         $this->_type = $baseColumn->getType();
         $this->setOptions($options);
@@ -52,7 +54,7 @@ class Column extends BaseColumn
      *
      * @param string $newName
      */
-    public function changeName($newName)
+    public function changeName($newName): void
     {
         $this->_setName($newName);
     }

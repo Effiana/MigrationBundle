@@ -2,8 +2,13 @@
 
 namespace Effiana\MigrationBundle\Migration;
 
+use DateTime;
 use Doctrine\DBAL\Schema\Schema;
 
+/**
+ * Class UpdateBundleVersionMigration
+ * @package Effiana\MigrationBundle\Migration
+ */
 class UpdateBundleVersionMigration implements Migration, FailIndependentMigration
 {
     /** @var MigrationState[] */
@@ -20,11 +25,11 @@ class UpdateBundleVersionMigration implements Migration, FailIndependentMigratio
     /**
      * @inheritdoc
      */
-    public function up(Schema $schema, QueryBag $queries)
+    public function up(Schema $schema, QueryBag $queries): void
     {
         $bundleVersions = $this->getLatestSuccessMigrationVersions();
         if (!empty($bundleVersions)) {
-            $date = new \DateTime();
+            $date = new DateTime();
             foreach ($bundleVersions as $bundleName => $bundleVersion) {
                 $sql = sprintf(
                     "INSERT INTO %s (bundle, version, loaded_at) VALUES ('%s', '%s', '%s')",
@@ -45,7 +50,7 @@ class UpdateBundleVersionMigration implements Migration, FailIndependentMigratio
      *      key   = bundle name
      *      value = version
      */
-    protected function getLatestSuccessMigrationVersions()
+    protected function getLatestSuccessMigrationVersions(): array
     {
         $result = [];
         foreach ($this->migrations as $migration) {

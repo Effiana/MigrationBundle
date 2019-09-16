@@ -5,7 +5,7 @@ namespace Effiana\MigrationBundle\Event;
 use Doctrine\DBAL\Connection;
 use Effiana\MigrationBundle\Tools\SafeDatabaseChecker;
 use Effiana\MigrationBundle\Migration\Migration;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 class MigrationEvent extends Event
 {
@@ -33,12 +33,12 @@ class MigrationEvent extends Event
      * @param Migration $migration
      * @param bool      $prepend If TRUE a migration is added to the beginning of the list
      */
-    public function addMigration(Migration $migration, $prepend = false)
+    public function addMigration(Migration $migration, $prepend = false): void
     {
         if ($prepend) {
             array_unshift($this->migrations, $migration);
         } else {
-            array_push($this->migrations, $migration);
+            $this->migrations[] = $migration;
         }
     }
 
@@ -47,7 +47,7 @@ class MigrationEvent extends Event
      *
      * @return Migration[]
      */
-    public function getMigrations()
+    public function getMigrations(): array
     {
         return $this->migrations;
     }
@@ -60,7 +60,7 @@ class MigrationEvent extends Event
      * @param array  $types  The query parameter types.
      * @return array
      */
-    public function getData($sql, array $params = array(), $types = array())
+    public function getData($sql, array $params = array(), $types = array()): array
     {
         $this->connection->connect();
 
@@ -73,7 +73,7 @@ class MigrationEvent extends Event
      * @param string $tableName
      * @return bool TRUE if a table exists; otherwise, FALSE
      */
-    public function isTableExist($tableName)
+    public function isTableExist($tableName): bool
     {
         return SafeDatabaseChecker::tablesExist($this->connection, $tableName);
     }

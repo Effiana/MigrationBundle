@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=0);
 namespace Effiana\MigrationBundle\Stacktrace;
 
 /**
@@ -82,7 +82,7 @@ class Node implements \RecursiveIterator
     /**
      * {@inheritdoc}
      */
-    public function valid()
+    public function valid(): bool
     {
         return $this->current() !== false;
     }
@@ -90,7 +90,7 @@ class Node implements \RecursiveIterator
     /**
      * {@inheritdoc}
      */
-    public function getNodes()
+    public function getNodes(): array
     {
         return $this->nodes;
     }
@@ -98,7 +98,7 @@ class Node implements \RecursiveIterator
     /**
      * @return int
      */
-    protected function createId()
+    protected function createId(): int
     {
         static $id = 0;
         
@@ -110,10 +110,10 @@ class Node implements \RecursiveIterator
      *
      * @return Node
      */
-    public function push($trace)
+    public function push($trace): Node
     {
         foreach ($this as $node) {
-            if ($node->getTrace() == $trace) {
+            if ($node->getTrace() === $trace) {
                 return $node;
             }
         }
@@ -125,7 +125,7 @@ class Node implements \RecursiveIterator
     /**
      * @return Node
      */
-    public function getParent()
+    public function getParent(): Node
     {
         return $this->parent;
     }
@@ -133,7 +133,7 @@ class Node implements \RecursiveIterator
     /**
      * @return Node
      */
-    public function getRoot()
+    public function getRoot(): Node
     {
         return $this->getParent() ? $this->getParent()->getRoot() : $this;
     }
@@ -141,7 +141,7 @@ class Node implements \RecursiveIterator
     /**
      * @return string
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
@@ -149,7 +149,7 @@ class Node implements \RecursiveIterator
     /**
      * @return bool
      */
-    public function hasChildren()
+    public function hasChildren(): bool
     {
         return $this->current() && !empty($this->current()->getNodes());
     }
@@ -165,7 +165,7 @@ class Node implements \RecursiveIterator
     /**
      * @param mixed $value
      */
-    public function addValue($value)
+    public function addValue($value): void
     {
         $this->values[] = $value;
     }
@@ -188,7 +188,7 @@ class Node implements \RecursiveIterator
     /**
      * @return bool
      */
-    public function containsBranch()
+    public function containsBranch(): bool
     {
         if (count($this->nodes)>1) {
             return true;
@@ -205,7 +205,7 @@ class Node implements \RecursiveIterator
     /**
      * @return array
      */
-    public function getTrace()
+    public function getTrace(): array
     {
         return $this->trace;
     }
