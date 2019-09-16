@@ -8,6 +8,7 @@ use Effiana\MigrationBundle\Migration\Loader\MigrationsLoader;
 use Effiana\MigrationBundle\Migration\MigrationState;
 use Effiana\MigrationBundle\Tests\Unit\Fixture\TestPackage\Test1Bundle\TestPackageTest1Bundle;
 use Effiana\MigrationBundle\Tests\Unit\Fixture\TestPackage\Test2Bundle\TestPackageTest2Bundle;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 class MigrationsLoaderTest extends \PHPUnit\Framework\TestCase
 {
@@ -16,6 +17,9 @@ class MigrationsLoaderTest extends \PHPUnit\Framework\TestCase
 
     /** @var \PHPUnit\Framework\MockObject\MockObject */
     protected $kernel;
+
+    /** @var \PHPUnit\Framework\MockObject\MockObject */
+    protected $parameterBag;
 
     /** @var \PHPUnit\Framework\MockObject\MockObject */
     protected $container;
@@ -31,6 +35,9 @@ class MigrationsLoaderTest extends \PHPUnit\Framework\TestCase
         $this->kernel          = $this->getMockBuilder('Symfony\Component\HttpKernel\Kernel')
             ->disableOriginalConstructor()
             ->getMock();
+        $this->parameterBag          = $this->getMockBuilder(ParameterBag::class)
+            ->disableOriginalConstructor()
+            ->getMock();
         $this->container       = $this->getMockForAbstractClass(
             'Symfony\Component\DependencyInjection\ContainerInterface'
         );
@@ -44,6 +51,7 @@ class MigrationsLoaderTest extends \PHPUnit\Framework\TestCase
 
         $this->loader = new MigrationsLoader(
             $this->kernel,
+            $this->parameterBag,
             $this->connection,
             $this->container,
             $this->eventDispatcher
@@ -63,23 +71,19 @@ class MigrationsLoaderTest extends \PHPUnit\Framework\TestCase
 
         $this->kernel->expects($this->any())
             ->method('getBundles')
-            ->will($this->returnValue($bundlesList));
+            ->willReturn($bundlesList);
 
         $this->eventDispatcher->expects($this->exactly(2))
             ->method('dispatch')
-            ->will(
-                $this->returnCallback(
-                    function ($eventName, $event) use (&$installed) {
-                        if ($eventName === MigrationEvents::PRE_UP) {
-                            if (null !== $installed) {
-                                foreach ($installed as $val) {
-                                    /** @var PreMigrationEvent $event */
-                                    $event->setLoadedVersion($val['bundle'], $val['version']);
-                                }
-                            }
+            ->willReturnCallback(
+                static function ($eventName, $event) use (&$installed) {
+                    if (($eventName === MigrationEvents::PRE_UP) && null !== $installed) {
+                        foreach ($installed as $val) {
+                            /** @var PreMigrationEvent $event */
+                            $event->setLoadedVersion($val['bundle'], $val['version']);
                         }
                     }
-                )
+                }
             );
 
         $migrations       = $this->loader->getMigrations();
@@ -134,7 +138,6 @@ class MigrationsLoaderTest extends \PHPUnit\Framework\TestCase
                     $test2Bundle . '\v1_1\Test2BundleMigration12',
                     $test2Bundle . '\v1_1\Test2BundleMigration11',
                     $test1Bundle . '\Test1BundleInstallation',
-                    $test1Bundle . '\v1_1\Test1BundleMigration11',
                     'Effiana\MigrationBundle\Migration\UpdateBundleVersionMigration',
                 ]
             ],
@@ -147,7 +150,6 @@ class MigrationsLoaderTest extends \PHPUnit\Framework\TestCase
                     $test2Bundle . '\v1_0\Test2BundleMigration10',
                     $test2Bundle . '\v1_0\Test2BundleMigration11',
                     $test2Bundle . '\v1_1\Test2BundleMigration12',
-                    $test2Bundle . '\v1_1\Test2BundleMigration11',
                     'Effiana\MigrationBundle\Migration\UpdateBundleVersionMigration',
                 ]
             ],
@@ -162,7 +164,6 @@ class MigrationsLoaderTest extends \PHPUnit\Framework\TestCase
                     $test2Bundle . '\v1_0\Test2BundleMigration10',
                     $test2Bundle . '\v1_0\Test2BundleMigration11',
                     $test2Bundle . '\v1_1\Test2BundleMigration12',
-                    $test2Bundle . '\v1_1\Test2BundleMigration11',
                     'Effiana\MigrationBundle\Migration\UpdateBundleVersionMigration',
                 ]
             ],

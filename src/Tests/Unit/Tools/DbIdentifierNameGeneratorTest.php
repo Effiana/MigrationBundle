@@ -115,8 +115,8 @@ class DbIdentifierNameGeneratorTest extends \PHPUnit\Framework\TestCase
             ['table1', ['column1'], true, 'uniq_table1_column1'],
             ['table1', ['column1', 'column2'], false, 'idx_table1_column1_column2'],
             ['table1', ['column1', 'column2'], true, 'uniq_table1_column1_column2'],
-            ['table1', ['column1', 'column2', 'column3'], false, 'IDX_1C95229D341CE00BAD15B1B1DA'],
-            ['table1', ['column1', 'column2', 'column3'], true, 'UNIQ_1C95229D341CE00BAD15B1B1D'],
+            ['table1', ['column1', 'column2', 'column3'], false, 'idx_table1_column1_column2_column3'],
+            ['table1', ['column1', 'column2', 'column3'], true, 'uniq_table1_column1_column2_column3'],
         ];
     }
 
@@ -172,14 +172,14 @@ class DbIdentifierNameGeneratorTest extends \PHPUnit\Framework\TestCase
                 ['table1', 'table2'],
                 ['column1', 'column2'],
                 'OroCRM',
-                'orocrm_1c95229d859c7327341ce00',
+                'orocrm_table1_table2_column1_column2',
                 false
             ],
             [
                 ['table1'],
                 ['column1', 'column2', 'column3', 'column3'],
                 'IDX',
-                'IDX_1C95229D341CE00BAD15B1B1DA',
+                'idx_table1_column1_column2_column3_column3',
                 null
             ],
         ];

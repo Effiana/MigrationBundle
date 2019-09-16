@@ -21,8 +21,7 @@ class MigrationQueryExecutorTest extends \PHPUnit\Framework\TestCase
             ->disableOriginalConstructor()
             ->getMock();
         $this->logger     = $this->createMock('Psr\Log\LoggerInterface');
-        $this->executor   = new MigrationQueryExecutor($this->connection);
-        $this->executor->setLogger($this->logger);
+        $this->executor   = new MigrationQueryExecutor($this->connection, $this->logger);
     }
 
     public function testGetConnection()

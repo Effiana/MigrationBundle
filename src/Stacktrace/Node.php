@@ -125,7 +125,7 @@ class Node implements \RecursiveIterator
     /**
      * @return Node
      */
-    public function getParent(): Node
+    public function getParent(): ?Node
     {
         return $this->parent;
     }

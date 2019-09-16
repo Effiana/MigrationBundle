@@ -43,8 +43,7 @@ class AbstractTestMigrationExecutor extends \PHPUnit\Framework\TestCase
 
         $this->logger = new ArrayLogger();
 
-        $this->queryExecutor = new MigrationQueryExecutor($this->connection);
-        $this->queryExecutor->setLogger($this->logger);
+        $this->queryExecutor = new MigrationQueryExecutor($this->connection, $this->logger);
     }
 
     /**
