@@ -90,7 +90,7 @@ class DumpMigrationsCommand extends Command
     /**
      * {@inheritdoc}
      */
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->version = $input->getOption('migration-version');
         $this->initializeBundleRestrictions($input->getOption('bundle'));
@@ -108,6 +108,8 @@ class DumpMigrationsCommand extends Command
         } else {
             $this->dumpPhpSchema($schema, $output);
         }
+
+        return 0;
     }
 
     /**

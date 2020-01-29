@@ -94,7 +94,7 @@ class LoadMigrationsCommand extends Command
      * @throws DBALException
      * @throws \ReflectionException
      */
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         $force = $input->getOption('force');
         $dryRun = $input->getOption('dry-run');
@@ -123,6 +123,8 @@ class LoadMigrationsCommand extends Command
             $output->writeln('To force execution run command with <info>--force</info> option:');
             $output->writeln(sprintf('    <info>%s --force</info>', $this->getName()));
         }
+
+        return 0;
     }
 
     /**
