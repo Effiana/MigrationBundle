@@ -128,7 +128,7 @@ class LoadDataFixturesCommand extends Command
         $appMigrationPath = str_replace(
             '/',
             DIRECTORY_SEPARATOR,
-            $this->kernel->getRootDir() . '/' . $fixtureRelativePath
+            $this->kernel->getRootDir() . '/src/App/' . $fixtureRelativePath
         );
         if (is_dir($appMigrationPath)) {
             $this->dataFixturesLoader->loadFromDirectory($appMigrationPath);
