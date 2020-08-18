@@ -179,7 +179,7 @@ class MigrationsLoader
         $appMigrationPath = str_replace(
             '/',
             DIRECTORY_SEPARATOR,
-            $this->parameterBag->get('kernel.project_dir') . '/src/App/' . self::MIGRATIONS_PATH
+            $this->parameterBag->get('kernel.project_dir') . '/src/' . self::MIGRATIONS_PATH
         );
         $bundleMigrationDirectories = $this->getMigrationsPath($appMigrationPath);
         if($bundleMigrationDirectories !== null) {
