@@ -37,11 +37,6 @@
     "autoload": {
         "psr-4": { "Effiana\\MigrationBundle\\": "src/" }
     },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.0-dev"
-        }
-    },
     "config": {
         "preferred-install": {
             "*": "dist"
